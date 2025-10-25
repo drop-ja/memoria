@@ -31,7 +31,7 @@ export default function VideoIntro({ onComplete }: VideoIntroProps) {
         playsInline
         onClick={() => onComplete()}
       >
-        <source src="/media/intro.webm" type="video/webm" />
+        <source src="/ai-media/intro.webm" type="video/webm" />
       </video>
 
       {/* スキップボタン */}

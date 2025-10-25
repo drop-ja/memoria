@@ -1,7 +1,7 @@
 #!/bin/zsh
 set -euo pipefail
 
-MEDIA_DIR="/Users/kanata/dev/memoria/repos/memoria/demo-site/public/media"
+MEDIA_DIR="/Users/kanata/dev/memoria/repos/memoria/demo-site/public/ai-media"
 THREADS=$(sysctl -n hw.ncpu 2>/dev/null || echo 4)
 
 echo "Converting MP4 -> WEBM (VP9 + Opus)..."
