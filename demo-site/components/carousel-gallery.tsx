@@ -1,25 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState, type TouchEvent, type WheelEvent } from "react"
 import useEmblaCarousel from "embla-carousel-react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { ChevronLeft, ChevronRight, ChevronUp } from "lucide-react"
 import { Button } from "@/components/ui/button"
-
-interface MediaItem {
-  id: number
-  type: "image" | "video"
-  src: string
-  title: string
-}
-
-const mediaItems: MediaItem[] = [
-  { id: 1, type: "image", src: "/ai-media/item1.webp", title: "アイテム 1" },
-  { id: 2, type: "video", src: "/ai-media/item2.webm", title: "アイテム 2" },
-  { id: 3, type: "image", src: "/ai-media/item3.webp", title: "アイテム 3" },
-  { id: 4, type: "image", src: "/ai-media/item4.webp", title: "アイテム 4" },
-  { id: 5, type: "video", src: "/ai-media/item5.webm", title: "アイテム 5" },
-  { id: 6, type: "image", src: "/ai-media/item6.webp", title: "アイテム 6" },
-]
+import MemoryListView from "@/components/memory-list-view"
+import { mediaItems } from "@/lib/media-items"
 
 export default function CarouselGallery() {
   const [emblaRef, emblaApi] = useEmblaCarousel({
@@ -28,6 +14,71 @@ export default function CarouselGallery() {
   })
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isAutoPlaying, setIsAutoPlaying] = useState(true)
+  const [showListView, setShowListView] = useState(false)
+  const touchStartYRef = useRef<number | null>(null)
+  const alreadyTriggeredRef = useRef(false)
+  const wheelDeltaRef = useRef(0)
+
+  const triggerListView = useCallback(() => {
+    if (alreadyTriggeredRef.current) return
+    alreadyTriggeredRef.current = true
+    wheelDeltaRef.current = 0
+    setIsAutoPlaying(false)
+    setShowListView(true)
+  }, [])
+
+  const resetToCarousel = useCallback(() => {
+    alreadyTriggeredRef.current = false
+    wheelDeltaRef.current = 0
+    setShowListView(false)
+  }, [])
+
+  const handleWheel = useCallback(
+    (event: WheelEvent<HTMLDivElement>) => {
+      if (showListView) return
+      if (event.deltaY > 0) {
+        wheelDeltaRef.current += event.deltaY
+        if (wheelDeltaRef.current > 180) {
+          triggerListView()
+        }
+      } else {
+        wheelDeltaRef.current = 0
+      }
+    },
+    [showListView, triggerListView],
+  )
+
+  const handleTouchStart = useCallback((event: TouchEvent<HTMLDivElement>) => {
+    touchStartYRef.current = event.touches[0]?.clientY ?? null
+  }, [])
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent<HTMLDivElement>) => {
+      if (showListView) return
+      if (touchStartYRef.current == null) return
+
+      const currentY = event.touches[0]?.clientY
+      if (currentY == null) return
+
+      const diff = touchStartYRef.current - currentY
+
+      if (diff > 80) {
+        triggerListView()
+        touchStartYRef.current = null
+      }
+    },
+    [showListView, triggerListView],
+  )
+
+  const handleTouchEnd = useCallback(() => {
+    touchStartYRef.current = null
+  }, [])
+
+  useEffect(() => {
+    if (showListView) {
+      setIsAutoPlaying(false)
+    }
+  }, [showListView])
 
   useEffect(() => {
     if (!emblaApi || !isAutoPlaying || mediaItems.length <= 1) return
@@ -128,8 +179,18 @@ export default function CarouselGallery() {
     }
   }
 
+  if (showListView) {
+    return <MemoryListView items={mediaItems} onBack={resetToCarousel} />
+  }
+
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-secondary/30 to-background">
+    <div
+      className="relative min-h-screen overflow-hidden bg-gradient-to-br from-background via-secondary/30 to-background"
+      onWheel={handleWheel}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       {/* ヘッダー */}
       <header className="relative z-40 flex items-center justify-between p-6">
         <h1 className="text-2xl font-bold tracking-tight text-foreground">DEMO</h1>
@@ -200,8 +261,13 @@ export default function CarouselGallery() {
         </Button>
       </div>
 
+      {/* リストビューへの誘導 */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-21 z-40 flex justify-center text-muted-foreground/80">
+        <ChevronUp className="h-7 w-7 animate-bounce" />
+      </div>
+
       {/* インジケーター */}
-      <div className="relative z-40 flex justify-center gap-2 pb-8">
+      <div className="relative z-40 flex justify-center gap-2 pb-16">
         {mediaItems.map((_, index) => (
           <button
             key={index}
