@@ -192,8 +192,7 @@ export default function CarouselGallery() {
       onTouchEnd={handleTouchEnd}
     >
       {/* ヘッダー */}
-      <header className="relative z-40 flex items-center justify-between p-6">
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">DEMO</h1>
+      <header className="relative z-40 flex items-center justify-end p-6">
         <div className="flex gap-2">
           <div className="h-2 w-2 rounded-full bg-accent" />
           <div className="h-2 w-2 rounded-full bg-accent/50" />

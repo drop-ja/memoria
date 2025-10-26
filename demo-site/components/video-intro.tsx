@@ -29,7 +29,6 @@ export default function VideoIntro({ onComplete }: VideoIntroProps) {
         autoPlay
         muted
         playsInline
-        onClick={() => onComplete()}
       >
         <source src="/ai-media/intro.webm" type="video/webm" />
       </video>
